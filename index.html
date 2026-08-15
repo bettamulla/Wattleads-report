@@ -60,7 +60,7 @@ textarea{width:100%;min-height:110px;resize:vertical;font-family:var(--mono);fon
 @media(min-width:620px){.issue{grid-template-columns:repeat(4,1fr)}}
 .issue div{background:var(--panel);padding:13px 16px}
 .issue .k{font-family:var(--mono);font-size:.54rem;letter-spacing:.16em;text-transform:uppercase;color:var(--grey)}
-.issue .v{font-weight:600;font-size:.92rem;margin-top:3px}
+.issue .v{font-weight:600;font-size:.92rem;margin-top:3px;overflow-wrap:break-word}
 
 /* section frame */
 .sec{padding:26px 24px;border-bottom:1px solid var(--border)}
@@ -168,11 +168,13 @@ tr:last-child td{border-bottom:none}
   .cert-strap{font-size:6.5pt;letter-spacing:.2em;color:#6A6A76!important;margin-top:5pt}
 
   /* issue block — a ruled register, not tiles */
-  .issue{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:0!important;
+  .issue{display:grid!important;grid-template-columns:1.1fr 1.6fr 1fr 1fr!important;gap:0!important;
     border:none!important;border-bottom:.5pt solid #C9C9D2!important;margin-bottom:16pt}
-  .issue div{padding:9pt 12pt 9pt 0!important;border:none!important}
+  .issue div{padding:9pt 10pt 9pt 0!important;border:none!important}
+  .issue div:nth-child(2){grid-column:span 2}
+  .issue div:nth-child(3),.issue div:nth-child(4){white-space:nowrap}
   .issue .k{font-size:6pt;letter-spacing:.16em;color:#8A8A96!important}
-  .issue .v{font-size:9.5pt;font-weight:600;color:#15151A!important;margin-top:2pt}
+  .issue .v{font-size:9pt;font-weight:600;color:#15151A!important;margin-top:2pt;line-height:1.3}
 
   /* sections */
   .sec{padding:14pt 0 16pt!important;border-bottom:.5pt solid #E2E2E8!important;page-break-inside:auto}
@@ -401,6 +403,15 @@ function parseSheet(text){
 /* ── helpers ─────────────────────────────── */
 function fmtD(d){ return d?String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear():"—"; }
 function fmtLong(d){ return d?d.toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"}):"—"; }
+function fmtSpan(a,b){
+  if(!a||!b) return fmtLong(a||b);
+  var mo={month:"short",year:"numeric"}, d={day:"numeric"};
+  if(a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth())
+    return a.getDate()+"–"+b.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
+  if(a.getFullYear()===b.getFullYear())
+    return a.toLocaleDateString("en-GB",{day:"numeric",month:"short"})+" – "+b.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
+  return a.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})+" – "+b.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
+}
 function gbp(n){ return "£"+n.toLocaleString("en-GB",{minimumFractionDigits:0,maximumFractionDigits:2}); }
 function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
 function ref(i){ return "S-"+String(i+1).padStart(3,"0"); }
@@ -428,6 +439,16 @@ function build(){
   });
   if(!rows.length){ al.textContent="No surveys match that client and period."; al.classList.add("on"); return; }
 
+  // a report is addressed to one electrician — never merge clients under one name
+  var inScope={}; rows.forEach(function(r){ inScope[r.client]=1; });
+  var scopeNames=Object.keys(inScope);
+  if(!client&&scopeNames.length>1){
+    al.textContent="This data covers "+scopeNames.length+" clients ("+scopeNames.join(", ")+"). Choose which one the report is for — a report must not mix clients.";
+    al.classList.add("on");
+    return;
+  }
+  var issuedTo=client||scopeNames[0];
+
   // ordered oldest first
   rows.sort(function(a,b){ return (a.booked||0)-(b.booked||0); });
 
@@ -440,8 +461,10 @@ function build(){
   var billable=rows.filter(function(r){return r.shown;}).reduce(function(a,r){return a+r.fee;},0);
   var outstanding=rows.filter(function(r){return r.shown&&!r.inv;}).reduce(function(a,r){return a+r.fee;},0);
 
+  var initials=(issuedTo.match(/\b[A-Za-z]/g)||["X"]).join("").slice(0,3).toUpperCase();
   var dates=rows.map(function(r){return r.booked||r.date;}).filter(Boolean).sort(function(a,b){return a-b;});
   var pFrom=from||dates[0], pTo=to||dates[dates.length-1];
+  var repNo="WL-"+initials+"-"+(pTo?pTo.getFullYear():"")+String(pTo?pTo.getMonth()+1:1).padStart(2,"0");
 
   // job breakdown
   var jobs={};
@@ -491,9 +514,9 @@ function build(){
     +'<div class="cert-strap">Wattleads &nbsp;&middot;&nbsp; missed-call recovery &nbsp;&middot;&nbsp; verification report</div>'
   +'</div>'
   +'<div class="issue">'
-    +'<div><div class="k">Issued to</div><div class="v">'+esc(client||rows[0].client)+'</div></div>'
-    +'<div><div class="k">Period</div><div class="v">'+fmtLong(pFrom)+' – '+fmtLong(pTo)+'</div></div>'
-    +'<div><div class="k">Report no.</div><div class="v">WL-'+(pTo?pTo.getFullYear():"")+String((pTo?pTo.getMonth()+1:1)).padStart(2,"0")+'-'+String(booked).padStart(3,"0")+'</div></div>'
+    +'<div><div class="k">Issued to</div><div class="v">'+esc(issuedTo)+'</div></div>'
+    +'<div><div class="k">Period</div><div class="v">'+fmtSpan(pFrom,pTo)+'</div></div>'
+    +'<div><div class="k">Report no.</div><div class="v">'+repNo+'</div></div>'
     +'<div><div class="k">Issued</div><div class="v">'+fmtLong(new Date())+'</div></div>'
   +'</div>'
 
@@ -563,7 +586,7 @@ function build(){
     +'</div>'
   +'</div>'
 
-  +'<div class="printfoot">'+esc(client||rows[0].client)+' &middot; WL-'+(pTo?pTo.getFullYear():"")+String((pTo?pTo.getMonth()+1:1)).padStart(2,"0")+'-'+String(booked).padStart(3,"0")+' &middot; Wattleads &middot; hello@wattleads.co.uk</div>'
+  +'<div class="printfoot">'+esc(issuedTo)+' &middot; '+repNo+' &middot; Wattleads &middot; hello@wattleads.co.uk</div>'
   +'</div>';
 
   var rep=document.getElementById("report");
