@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Survey Report Generator — Wattleads</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0B0B0F; --panel:#131320; --panel2:#191926;
+  --purple:#7455FF; --hot:#A38DFF; --pale:#D6CCFF;
+  --yellow:#FFD400; --green:#20D66B; --red:#FF5C5C;
+  --white:#F5F7FA; --grey:#8C949F; --border:#262636;
+  --trade:'Big Shoulders Display',sans-serif;
+  --body:'Inter',system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--ink);color:var(--white);font-family:var(--body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,textarea,select{font:inherit;color:var(--white);background:var(--ink);border:1px solid var(--border);border-radius:8px;outline:none;padding:11px 12px}
+input:focus,textarea:focus,select:focus,button:focus-visible{border-color:var(--purple);outline:2px solid rgba(116,85,255,.3);outline-offset:1px}
+.shell{max-width:900px;margin:0 auto;padding:0 16px 80px}
+
+/* ── console ─────────────────────────────── */
+.console{border-bottom:1px solid var(--border);padding:20px 0 24px;margin-bottom:34px}
+.masthead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.wm{font-family:var(--trade);font-weight:800;font-size:1.7rem;letter-spacing:.05em;text-transform:uppercase;position:relative}
+.wm .b{color:var(--purple);text-shadow:0 0 12px rgba(116,85,255,.7)}
+.wm-sub{font-family:var(--mono);font-size:.58rem;letter-spacing:.24em;color:var(--grey);text-transform:uppercase;margin-top:2px}
+.console h1{font-family:var(--body);font-size:.72rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--yellow)}
+
+.field{margin-bottom:12px}
+.field label{display:block;font-family:var(--mono);font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--grey);margin-bottom:6px}
+textarea{width:100%;min-height:110px;resize:vertical;font-family:var(--mono);font-size:.76rem;line-height:1.6}
+.grid2{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:620px){.grid2{grid-template-columns:1fr 1fr 1fr}}
+.grid2 input,.grid2 select{width:100%}
+.go{width:100%;background:var(--purple);color:#fff;font-weight:700;padding:15px;border-radius:11px;margin-top:6px;letter-spacing:.02em;transition:box-shadow .2s}
+.go:hover{box-shadow:0 0 30px rgba(116,85,255,.45)}
+.mini{font-family:var(--mono);font-size:.58rem;color:var(--grey);letter-spacing:.06em;margin-top:9px;line-height:1.8}
+.alert{display:none;font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;padding:11px 13px;border-radius:8px;border:1px solid var(--red);color:var(--red);background:rgba(255,92,92,.07);margin-top:12px}
+.alert.on{display:block}
+
+/* ── report document ─────────────────────── */
+#report{display:none}
+#report.on{display:block}
+
+.cert{background:var(--panel);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+
+/* masthead of the certificate */
+.cert-head{padding:26px 24px 22px;border-bottom:1px solid var(--border);background:
+  linear-gradient(180deg,rgba(116,85,255,.09),transparent)}
+.cert-title{font-family:var(--trade);font-weight:800;font-size:clamp(1.7rem,5.4vw,2.5rem);letter-spacing:.02em;line-height:1.02;text-transform:uppercase}
+.cert-title .q{color:var(--hot)}
+.cert-strap{font-family:var(--mono);font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--grey);margin-top:8px}
+.issue{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+@media(min-width:620px){.issue{grid-template-columns:repeat(4,1fr)}}
+.issue div{background:var(--panel);padding:13px 16px}
+.issue .k{font-family:var(--mono);font-size:.54rem;letter-spacing:.16em;text-transform:uppercase;color:var(--grey)}
+.issue .v{font-weight:600;font-size:.92rem;margin-top:3px}
+
+/* section frame */
+.sec{padding:26px 24px;border-bottom:1px solid var(--border)}
+.sec:last-child{border-bottom:none}
+.sec-h{display:flex;align-items:center;gap:11px;margin-bottom:18px}
+.sec-n{font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.1em;color:var(--purple);border:1px solid var(--purple);border-radius:4px;padding:3px 6px;flex:none}
+.sec-t{font-family:var(--body);font-weight:700;font-size:.76rem;letter-spacing:.17em;text-transform:uppercase}
+.sec-note{font-size:.85rem;color:var(--grey);margin-bottom:16px;max-width:62ch}
+
+/* headline result */
+.result{display:grid;grid-template-columns:1fr;gap:14px;align-items:center}
+@media(min-width:620px){.result{grid-template-columns:auto 1fr}}
+.dial{width:132px;height:132px;border-radius:50%;display:grid;place-items:center;position:relative;flex:none;margin:0 auto}
+.dial .inner{width:106px;height:106px;border-radius:50%;background:var(--panel);display:grid;place-items:center;text-align:center}
+.dial .pc{font-family:var(--trade);font-weight:800;font-size:2.1rem;line-height:1}
+.dial .lb{font-family:var(--mono);font-size:.5rem;letter-spacing:.15em;color:var(--grey);text-transform:uppercase;margin-top:2px}
+.verdict .vt{font-family:var(--trade);font-weight:800;font-size:1.6rem;letter-spacing:.02em;text-transform:uppercase;line-height:1.1}
+.verdict p{font-size:.9rem;color:var(--grey);margin-top:7px;max-width:46ch}
+
+/* metric row */
+.mrow{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:11px;overflow:hidden;margin-top:20px}
+@media(min-width:620px){.mrow{grid-template-columns:repeat(4,1fr)}}
+.m{background:var(--panel2);padding:15px 14px}
+.m .v{font-family:var(--trade);font-weight:800;font-size:1.85rem;line-height:1}
+.m .l{font-family:var(--mono);font-size:.52rem;letter-spacing:.14em;text-transform:uppercase;color:var(--grey);margin-top:5px}
+.m.g .v{color:var(--green)} .m.y .v{color:var(--yellow)} .m.p .v{color:var(--hot)}
+
+/* continuity chain — the signature */
+.chain{display:grid;gap:9px}
+.link{display:grid;grid-template-columns:74px 1fr auto;align-items:center;gap:12px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:13px 14px}
+.link .stage{font-family:var(--mono);font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;color:var(--grey)}
+.link .bar{height:11px;border-radius:3px;background:rgba(140,148,159,.13);overflow:hidden;position:relative}
+.link .fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--purple),var(--hot))}
+.link.pass .fill{background:linear-gradient(90deg,var(--purple),var(--green))}
+.link .n{font-family:var(--trade);font-weight:800;font-size:1.3rem;min-width:42px;text-align:right}
+.drop{font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;color:var(--grey);text-align:right;padding:2px 4px 0}
+.drop b{color:var(--red);font-weight:500}
+
+/* schedule of results table */
+.tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:11px}
+table{width:100%;border-collapse:collapse;font-size:.8rem;min-width:660px}
+th{font-family:var(--mono);font-size:.52rem;letter-spacing:.14em;text-transform:uppercase;color:var(--grey);text-align:left;padding:11px 12px;background:var(--panel2);border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:11px 12px;border-bottom:1px solid rgba(38,38,54,.65);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.ref{font-family:var(--mono);font-size:.66rem;color:var(--grey)}
+.pcode{font-family:var(--mono);font-size:.72rem;color:var(--hot)}
+.job{font-family:var(--mono);font-size:.55rem;letter-spacing:.1em;padding:3px 7px;border-radius:4px;border:1px solid var(--border);color:var(--grey);white-space:nowrap}
+.fee{font-family:var(--mono);font-weight:700;text-align:right;white-space:nowrap}
+/* continuity indicator: three gates */
+.gates{display:flex;gap:3px;align-items:center}
+.gate{width:15px;height:15px;border-radius:3px;border:1px solid var(--border);display:grid;place-items:center;font-size:.5rem;color:var(--grey)}
+.gate.on{border-color:var(--green);background:rgba(32,214,107,.14);color:var(--green)}
+.gate.off{border-color:rgba(255,92,92,.45);color:var(--red)}
+.gatelbl{font-family:var(--mono);font-size:.5rem;letter-spacing:.1em;color:var(--grey);margin-left:5px;white-space:nowrap}
+
+/* breakdown bars */
+.bd{display:grid;gap:11px}
+.bdrow{display:grid;grid-template-columns:92px 1fr 78px;align-items:center;gap:11px}
+.bdrow .k{font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--white)}
+.bdrow .track{height:9px;background:rgba(140,148,159,.12);border-radius:3px;overflow:hidden}
+.bdrow .f{height:100%;background:linear-gradient(90deg,var(--purple),var(--hot));border-radius:3px}
+.bdrow .val{font-family:var(--mono);font-size:.66rem;color:var(--grey);text-align:right}
+
+/* declaration */
+.dec{background:var(--panel2);border:1px solid var(--border);border-left:3px solid var(--yellow);border-radius:10px;padding:18px 18px}
+.dec p{font-size:.86rem;color:var(--grey);margin-bottom:10px}
+.dec p:last-child{margin-bottom:0}
+.dec strong{color:var(--white);font-weight:600}
+.sign{display:grid;grid-template-columns:1fr;gap:14px;margin-top:20px}
+@media(min-width:620px){.sign{grid-template-columns:1fr 1fr}}
+.sigbox{border-top:1px solid var(--border);padding-top:9px}
+.sigbox .k{font-family:var(--mono);font-size:.52rem;letter-spacing:.15em;text-transform:uppercase;color:var(--grey)}
+.sigbox .v{font-weight:600;margin-top:3px}
+.total{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:16px 18px;background:linear-gradient(90deg,rgba(116,85,255,.14),transparent);border:1px solid var(--purple);border-radius:11px;margin-top:18px}
+.total .k{font-family:var(--mono);font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--pale)}
+.total .v{font-family:var(--trade);font-weight:800;font-size:2rem;line-height:1}
+
+.tools{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.tool{flex:1;min-width:140px;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;padding:13px;border:1px solid var(--border);border-radius:10px;color:var(--grey);text-align:center}
+.tool.main{border-color:var(--purple);color:var(--white);background:rgba(116,85,255,.1)}
+
+/* ── print: becomes a real document ──────── */
+@media print{
+  @page{size:A4;margin:14mm}
+  body{background:#fff;color:#111}
+  .console,.tools,.mini{display:none!important}
+  .shell{max-width:none;padding:0}
+  .cert{background:#fff;border:1px solid #ccc;border-radius:0}
+  .cert-head{background:none;border-bottom:2px solid #111}
+  .cert-title{color:#111}.cert-title .q{color:#5C41E0}
+  .cert-strap,.sec-n,.m .l,.link .stage,th,.bdrow .k,.sigbox .k,.issue .k,.dial .lb,.gatelbl,.drop{color:#555!important}
+  .sec{border-bottom:1px solid #ddd;page-break-inside:avoid}
+  .issue div,.m,.link,.dec,.sigbox,.tablewrap,table th{background:#fff!important;border-color:#ddd!important}
+  .issue{background:#ddd}
+  .m .v,.link .n,.dial .pc,.verdict .vt,.total .v{color:#111!important}
+  .m.g .v{color:#0a8f45!important}.m.y .v{color:#8a6d00!important}.m.p .v{color:#5C41E0!important}
+  .dial .inner{background:#fff}
+  .pcode{color:#5C41E0!important}
+  .gate.on{border-color:#0a8f45!important;color:#0a8f45!important;background:#eafaf0!important}
+  .total{background:none;border-color:#5C41E0}
+  .total .k{color:#5C41E0!important}
+  tr,.link{page-break-inside:avoid}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ── console ── -->
+  <section class="console" id="console">
+    <div class="masthead">
+      <div>
+        <div class="wm">W<span class="b">⚡</span>TTLEADS</div>
+        <div class="wm-sub">Survey Verification Report</div>
+      </div>
+      <h1>Generator</h1>
+    </div>
+
+    <div class="field">
+      <label for="data">Paste the SURVEYS sheet — headers and all</label>
+      <textarea id="data" placeholder="Select your rows in Google Sheets including the header row, copy, paste here.&#10;&#10;Recognised columns: date · client · homeowner · phone · postcode · job type · booked date · shown · confirmed · fee · invoiced"></textarea>
+    </div>
+
+    <div class="grid2">
+      <div class="field"><label for="client">Report for</label><select id="client"><option value="">— paste data first —</option></select></div>
+      <div class="field"><label for="from">Period from</label><input type="date" id="from"></div>
+      <div class="field"><label for="to">Period to</label><input type="date" id="to"></div>
+    </div>
+
+    <button class="go" id="build">Generate report</button>
+    <div class="alert" id="alert"></div>
+    <div class="mini">Reads tab-separated (Sheets copy) or CSV. Column order doesn't matter — headers are matched by name. Nothing leaves this page.</div>
+  </section>
+
+  <!-- ── report ── -->
+  <div id="report"></div>
+  <div class="tools" id="tools" style="display:none">
+    <button class="tool main" id="printBtn">Save as PDF</button>
+    <button class="tool" id="againBtn">New report</button>
+  </div>
+
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ── parsing ─────────────────────────────── */
+function splitRow(row,sep){
+  if(sep==="\t") return row.split("\t");
+  var out=[],cur="",q=false;
+  for(var i=0;i<row.length;i++){
+    var c=row[i];
+    if(q){ if(c==='"'){ if(row[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=c; }
+    else { if(c==='"') q=true; else if(c===","){ out.push(cur); cur=""; } else cur+=c; }
+  }
+  out.push(cur); return out;
+}
+function findCol(head,names){
+  for(var i=0;i<head.length;i++){
+    for(var n=0;n<names.length;n++){ if(head[i].indexOf(names[n])>-1) return i; }
+  }
+  return -1;
+}
+function parseDate(v){
+  v=(v||"").trim(); if(!v) return null;
+  var m=v.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);   // UK dd/mm/yyyy
+  if(m){ var y=+m[3]; if(y<100) y+=2000; return new Date(y,+m[2]-1,+m[1]); }
+  m=v.match(/^(\d{4})-(\d{2})-(\d{2})/);                          // ISO
+  if(m) return new Date(+m[1],+m[2]-1,+m[3]);
+  var d=new Date(v); return isNaN(d)?null:d;
+}
+function yes(v){ return /^(y|yes|true|1|shown|confirmed|✓)$/i.test((v||"").trim()); }
+function money(v){
+  var n=parseFloat(String(v||"").replace(/[^0-9.\-]/g,""));
+  return isNaN(n)?0:n;
+}
+
+function parseSheet(text){
+  var rows=text.split(/\r?\n/).filter(function(r){return r.trim()!=="";});
+  if(rows.length<2) return {error:"Needs a header row and at least one survey."};
+  var sep=rows[0].indexOf("\t")>-1?"\t":",";
+  var head=splitRow(rows[0],sep).map(function(h){return h.trim().toLowerCase();});
+  var c={
+    date:findCol(head,["date"]),
+    client:findCol(head,["client","electrician","spark"]),
+    home:findCol(head,["homeowner","homowner","home owner","houseowner","occupier","customer","client name","name"]),
+    phone:findCol(head,["phone","number","mobile","tel"]),
+    post:findCol(head,["postcode","post code","postal","area","town"]),
+    job:findCol(head,["job","work","type","service"]),
+    booked:findCol(head,["booked"]),
+    shown:findCol(head,["shown","attended"]),
+    conf:findCol(head,["confirmed","verif"]),
+    fee:findCol(head,["fee","price","amount","charge"]),
+    inv:findCol(head,["invoiced","billed"])
+  };
+  // "date" is greedy — make sure booked date didn't steal the plain date column
+  if(c.date===c.booked&&c.date>-1){ c.date=findCol(head,["date"]); }
+  // stop one column answering for two fields
+  ["home","phone","post","job","client"].forEach(function(k){
+    if(c[k]>-1&&(c[k]===c.date||c[k]===c.booked||c[k]===c.shown||c[k]===c.fee)) c[k]=-1;
+  });
+  if(c.home>-1&&c.home===c.client) c.home=-1;
+  if(c.shown<0) return {error:"No “Shown” column found — that column is what the report is built on."};
+
+  var recs=[];
+  for(var r=1;r<rows.length;r++){
+    var cell=splitRow(rows[r],sep);
+    var get=function(i){ return i>-1?(cell[i]||"").trim():""; };
+    if(!cell.join("").trim()) continue;
+    var shownRaw=get(c.shown);
+    if(!get(c.home)&&!get(c.post)&&!shownRaw) continue;
+    recs.push({
+      date:parseDate(get(c.date))||parseDate(get(c.booked)),
+      booked:parseDate(get(c.booked))||parseDate(get(c.date)),
+      client:get(c.client)||"Client",
+      home:get(c.home)||"—",
+      phone:get(c.phone),
+      post:get(c.post),
+      job:(get(c.job)||"—").toUpperCase(),
+      shown:yes(shownRaw),
+      shownSet:shownRaw!=="",
+      conf:yes(get(c.conf)),
+      fee:money(get(c.fee)),
+      inv:yes(get(c.inv))
+    });
+  }
+  if(!recs.length) return {error:"No survey rows found under those headers."};
+  return {recs:recs};
+}
+
+/* ── helpers ─────────────────────────────── */
+function fmtD(d){ return d?String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear():"—"; }
+function fmtLong(d){ return d?d.toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"}):"—"; }
+function gbp(n){ return "£"+n.toLocaleString("en-GB",{minimumFractionDigits:0,maximumFractionDigits:2}); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+function ref(i){ return "S-"+String(i+1).padStart(3,"0"); }
+
+var DATA=null;
+
+/* ── report build ────────────────────────── */
+function build(){
+  var res=parseSheet(document.getElementById("data").value);
+  var al=document.getElementById("alert");
+  if(res.error){ al.textContent=res.error; al.classList.add("on"); return; }
+  al.classList.remove("on");
+
+  var client=document.getElementById("client").value;
+  var from=document.getElementById("from").value?new Date(document.getElementById("from").value):null;
+  var to=document.getElementById("to").value?new Date(document.getElementById("to").value):null;
+  if(to) to.setHours(23,59,59);
+
+  var rows=res.recs.filter(function(r){
+    if(client&&r.client!==client) return false;
+    var d=r.booked||r.date;
+    if(from&&d&&d<from) return false;
+    if(to&&d&&d>to) return false;
+    return true;
+  });
+  if(!rows.length){ al.textContent="No surveys match that client and period."; al.classList.add("on"); return; }
+
+  // ordered oldest first
+  rows.sort(function(a,b){ return (a.booked||0)-(b.booked||0); });
+
+  var booked=rows.length;
+  var shown=rows.filter(function(r){return r.shown;}).length;
+  var conf=rows.filter(function(r){return r.shown&&r.conf;}).length;
+  var pending=rows.filter(function(r){return !r.shownSet;}).length;
+  var showRate=booked?Math.round(shown/booked*100):0;
+  var confRate=shown?Math.round(conf/shown*100):0;
+  var billable=rows.filter(function(r){return r.shown;}).reduce(function(a,r){return a+r.fee;},0);
+  var outstanding=rows.filter(function(r){return r.shown&&!r.inv;}).reduce(function(a,r){return a+r.fee;},0);
+
+  var dates=rows.map(function(r){return r.booked||r.date;}).filter(Boolean).sort(function(a,b){return a-b;});
+  var pFrom=from||dates[0], pTo=to||dates[dates.length-1];
+
+  // job breakdown
+  var jobs={};
+  rows.forEach(function(r){ jobs[r.job]=jobs[r.job]||{n:0,shown:0,fee:0}; jobs[r.job].n++; if(r.shown){jobs[r.job].shown++;jobs[r.job].fee+=r.fee;} });
+  var jobKeys=Object.keys(jobs).sort(function(a,b){return jobs[b].n-jobs[a].n;});
+  var jobMax=Math.max.apply(null,jobKeys.map(function(k){return jobs[k].n;}));
+
+  // verdict language — plain, no hype
+  var vt,vp;
+  if(pending===booked){ vt="Awaiting outcomes"; vp="These surveys are booked but none have an outcome recorded yet. Nothing is billable until a survey is marked as shown."; }
+  else if(showRate>=75){ vt="Strong attendance"; vp="Most booked surveys were attended. Reminders are doing their job — the enquiries reaching you are turning into doorstep conversations."; }
+  else if(showRate>=50){ vt="Steady attendance"; vp="Around half to three quarters of booked surveys were attended. There is room to lift this with earlier confirmation calls."; }
+  else { vt="Attendance below target"; vp="Fewer than half of booked surveys were attended. Worth reviewing booking lead times — the longer the gap, the more no-shows."; }
+
+  var chainMax=booked;
+  function link(stage,n,pass,note){
+    var pct=chainMax?Math.round(n/chainMax*100):0;
+    return '<div><div class="link'+(pass?" pass":"")+'">'
+      +'<span class="stage">'+stage+'</span>'
+      +'<span class="bar"><span class="fill" style="width:'+pct+'%"></span></span>'
+      +'<span class="n">'+n+'</span></div>'
+      +(note?'<div class="drop">'+note+'</div>':'')+'</div>';
+  }
+
+  var tableRows=rows.map(function(r,i){
+    var g1='<span class="gate on">✓</span>';
+    var g2=r.shownSet?(r.shown?'<span class="gate on">✓</span>':'<span class="gate off">✕</span>'):'<span class="gate">·</span>';
+    var g3=r.shown?(r.conf?'<span class="gate on">✓</span>':'<span class="gate">·</span>'):'<span class="gate">·</span>';
+    var state=!r.shownSet?"PENDING":(r.shown?(r.conf?"VERIFIED":"SHOWN"):"NO SHOW");
+    return "<tr>"
+      +'<td class="ref">'+ref(i)+"</td>"
+      +"<td>"+esc(r.home)+(r.phone?'<div class="ref">'+esc(r.phone)+"</div>":"")+"</td>"
+      +'<td class="pcode">'+esc(r.post||"—")+"</td>"
+      +'<td><span class="job">'+esc(r.job)+"</span></td>"
+      +'<td class="ref">'+fmtD(r.booked)+"</td>"
+      +'<td><div class="gates">'+g1+g2+g3+'<span class="gatelbl">'+state+"</span></div></td>"
+      +'<td class="fee">'+(r.shown&&r.fee?gbp(r.fee):"—")+"</td>"
+      +"</tr>";
+  }).join("");
+
+  var html=''
+  +'<div class="cert">'
+
+  /* masthead */
+  +'<div class="cert-head">'
+    +'<div class="cert-title">Schedule of <span class="q">surveys</span></div>'
+    +'<div class="cert-strap">Wattleads // missed-call recovery // verification report</div>'
+  +'</div>'
+  +'<div class="issue">'
+    +'<div><div class="k">Issued to</div><div class="v">'+esc(client||rows[0].client)+'</div></div>'
+    +'<div><div class="k">Period</div><div class="v">'+fmtLong(pFrom)+' – '+fmtLong(pTo)+'</div></div>'
+    +'<div><div class="k">Report no.</div><div class="v">WL-'+(pTo?pTo.getFullYear():"")+String((pTo?pTo.getMonth()+1:1)).padStart(2,"0")+'-'+String(booked).padStart(3,"0")+'</div></div>'
+    +'<div><div class="k">Issued</div><div class="v">'+fmtLong(new Date())+'</div></div>'
+  +'</div>'
+
+  /* 01 result */
+  +'<div class="sec">'
+    +'<div class="sec-h"><span class="sec-n">01</span><span class="sec-t">Result for the period</span></div>'
+    +'<div class="result">'
+      +'<div class="dial" style="background:conic-gradient(var(--purple) 0deg '+(showRate*3.6)+'deg, rgba(140,148,159,.14) '+(showRate*3.6)+'deg 360deg)">'
+        +'<div class="inner"><div><div class="pc">'+showRate+'%</div><div class="lb">Shown</div></div></div>'
+      +'</div>'
+      +'<div class="verdict"><div class="vt">'+vt+'</div><p>'+vp+'</p></div>'
+    +'</div>'
+    +'<div class="mrow">'
+      +'<div class="m"><div class="v">'+booked+'</div><div class="l">Surveys booked</div></div>'
+      +'<div class="m g"><div class="v">'+shown+'</div><div class="l">Attended</div></div>'
+      +'<div class="m p"><div class="v">'+conf+'</div><div class="l">Homeowner verified</div></div>'
+      +'<div class="m y"><div class="v">'+pending+'</div><div class="l">Awaiting outcome</div></div>'
+    +'</div>'
+  +'</div>'
+
+  /* 02 continuity */
+  +'<div class="sec">'
+    +'<div class="sec-h"><span class="sec-n">02</span><span class="sec-t">Continuity</span></div>'
+    +'<p class="sec-note">Every survey passes three gates. A survey only becomes billable once it clears the second, and only counts as verified once the homeowner confirms you attended.</p>'
+    +'<div class="chain">'
+      +link("Booked",booked,false,"")
+      +link("Attended",shown,shown>0,(booked-shown>0?"<b>"+(booked-shown)+" did not clear this gate</b>":""))
+      +link("Verified",conf,conf>0,(shown-conf>0?(shown-conf)+" awaiting homeowner confirmation":""))
+    +'</div>'
+  +'</div>'
+
+  /* 03 schedule */
+  +'<div class="sec">'
+    +'<div class="sec-h"><span class="sec-n">03</span><span class="sec-t">Schedule of results</span></div>'
+    +'<p class="sec-note">Gates read left to right: booked · attended · verified. Every fee shown here is tied to a survey you attended.</p>'
+    +'<div class="tablewrap"><table>'
+      +'<thead><tr><th>Ref</th><th>Homeowner</th><th>Postcode</th><th>Job</th><th>Booked</th><th>Continuity</th><th style="text-align:right">Fee</th></tr></thead>'
+      +'<tbody>'+tableRows+'</tbody>'
+    +'</table></div>'
+  +'</div>'
+
+  /* 04 breakdown */
+  +'<div class="sec">'
+    +'<div class="sec-h"><span class="sec-n">04</span><span class="sec-t">By job type</span></div>'
+    +'<div class="bd">'
+      +jobKeys.map(function(k){
+        var j=jobs[k];
+        return '<div class="bdrow"><span class="k">'+esc(k)+'</span>'
+          +'<span class="track"><span class="f" style="width:'+Math.round(j.n/jobMax*100)+'%"></span></span>'
+          +'<span class="val">'+j.shown+'/'+j.n+' shown</span></div>';
+      }).join("")
+    +'</div>'
+  +'</div>'
+
+  /* 05 billing */
+  +'<div class="sec">'
+    +'<div class="sec-h"><span class="sec-n">05</span><span class="sec-t">Billing</span></div>'
+    +'<div class="dec">'
+      +'<p>You are charged <strong>per shown survey</strong>. Surveys marked as no-show or still awaiting an outcome carry no charge, and appear above only so the full picture is visible.</p>'
+      +'<p>Where a homeowner has confirmed you attended, the survey is marked <strong>verified</strong>. If any line here does not match your records, reply within 48 hours and it comes off the invoice while we check it.</p>'
+    +'</div>'
+    +'<div class="total"><span class="k">Billable this period</span><span class="v">'+gbp(billable)+'</span></div>'
+    +(outstanding&&outstanding!==billable?'<div class="total" style="background:none;border-color:var(--border)"><span class="k" style="color:var(--grey)">Not yet invoiced</span><span class="v" style="font-size:1.4rem">'+gbp(outstanding)+'</span></div>':"")
+    +'<div class="sign">'
+      +'<div class="sigbox"><div class="k">Prepared by</div><div class="v">Wattleads</div></div>'
+      +'<div class="sigbox"><div class="k">Queries</div><div class="v">hello@wattleads.co.uk</div></div>'
+    +'</div>'
+  +'</div>'
+
+  +'</div>';
+
+  var rep=document.getElementById("report");
+  rep.innerHTML=html; rep.classList.add("on");
+  document.getElementById("tools").style.display="flex";
+  document.getElementById("console").style.display="none";
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+/* ── client list populates on paste ──────── */
+document.getElementById("data").addEventListener("input",function(){
+  var res=parseSheet(this.value);
+  var sel=document.getElementById("client");
+  if(res.error||!res.recs){ return; }
+  DATA=res.recs;
+  var names={}; res.recs.forEach(function(r){ names[r.client]=1; });
+  var keys=Object.keys(names);
+  sel.innerHTML='<option value="">All clients</option>'+keys.map(function(k){return '<option>'+esc(k)+"</option>";}).join("");
+  if(keys.length===1) sel.value=keys[0];
+});
+
+document.getElementById("build").addEventListener("click",build);
+document.getElementById("printBtn").addEventListener("click",function(){ window.print(); });
+document.getElementById("againBtn").addEventListener("click",function(){
+  document.getElementById("report").classList.remove("on");
+  document.getElementById("tools").style.display="none";
+  document.getElementById("console").style.display="block";
+  window.scrollTo({top:0});
+});
+})();
+</script>
+</body>
+</html>
