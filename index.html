@@ -138,49 +138,135 @@ tr:last-child td{border-bottom:none}
 .total .k{font-family:var(--mono);font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--pale)}
 .total .v{font-family:var(--trade);font-weight:800;font-size:2rem;line-height:1}
 
+.printfoot{display:none}
 .tools{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
 .tool{flex:1;min-width:140px;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;padding:13px;border:1px solid var(--border);border-radius:10px;color:var(--grey);text-align:center}
 .tool.main{border-color:var(--purple);color:var(--white);background:rgba(116,85,255,.1)}
 
 /* ── print: becomes a real document ──────── */
 @media print{
-  @page{size:A4;margin:14mm}
-  body{background:#fff;color:#111}
-  .console,.tools,.mini{display:none!important}
-  .shell{max-width:none;padding:0}
-  .cert{background:#fff;border:1px solid #ccc;border-radius:0}
-  .cert-head{background:none;border-bottom:2px solid #111}
-  .cert-title{color:#111}.cert-title .q{color:#5C41E0}
-  .cert-strap,.sec-n,.m .l,.link .stage,th,.bdrow .k,.sigbox .k,.issue .k,.dial .lb,.gatelbl,.drop{color:#555!important}
-  .sec{border-bottom:1px solid #ddd;page-break-inside:avoid}
-  .issue div,.m,.link,.dec,.sigbox,.tablewrap,table th{background:#fff!important;border-color:#ddd!important}
-  .issue{background:#ddd}
-  .m .v,.link .n,.dial .pc,.verdict .vt,.total .v{color:#111!important}
-  .m.g .v{color:#0a8f45!important}.m.y .v{color:#8a6d00!important}.m.p .v{color:#5C41E0!important}
-  .dial .inner{background:#fff}
-  .pcode{color:#5C41E0!important}
-  .gate.on{border-color:#0a8f45!important;color:#0a8f45!important;background:#eafaf0!important}
-  .total{background:none;border-color:#5C41E0}
-  .total .k{color:#5C41E0!important}
-  tr,.link{page-break-inside:avoid}
-  /* table must fit the page — no horizontal cut-off */
-  .tablewrap{overflow:visible!important;border:1px solid #ddd}
-  table{min-width:0!important;width:100%!important;font-size:8.5pt;table-layout:fixed}
-  th,td{padding:6px 5px!important;word-break:break-word}
-  th:nth-child(1),td:nth-child(1){width:8%}
-  th:nth-child(2),td:nth-child(2){width:24%}
-  th:nth-child(3),td:nth-child(3){width:12%}
-  th:nth-child(4),td:nth-child(4){width:14%}
-  th:nth-child(5),td:nth-child(5){width:13%}
-  th:nth-child(6),td:nth-child(6){width:19%}
-  th:nth-child(7),td:nth-child(7){width:10%}
-  .job{font-size:7pt;padding:1px 4px;border-color:#ccc!important}
-  .ref{font-size:7.5pt}
-  .gate{width:11px;height:11px;font-size:7pt}
-  .gatelbl{font-size:6.5pt;margin-left:3px}
+  @page{size:A4;margin:16mm 15mm 18mm}
+
+  /* ── printed document: ink on paper, not a dark UI inverted ── */
+  html,body{background:#fff!important;color:#15151A!important;font-size:10pt;line-height:1.5}
+  .console,.tools,.mini,#count{display:none!important}
+  .shell{max-width:none;padding:0;margin:0}
+
+  /* no panels, no fills, no glow — structure comes from rules and space */
+  .cert,.cert-head,.issue,.issue div,.sec,.m,.mrow,.link,.dec,.sigbox,.total,
+  .tablewrap,table,th,td,.dial,.dial .inner,.job,.gate,.bdrow .track,.bdrow .f,
+  .link .bar,.link .fill{
+    background:none!important;box-shadow:none!important;text-shadow:none!important;
+    border-radius:0!important
+  }
+  .cert{border:none!important}
+
+  /* masthead */
+  .cert-head{padding:0 0 10pt;border-bottom:1.5pt solid #15151A!important;margin-bottom:0}
+  .cert-title{font-size:26pt;letter-spacing:.02em;color:#15151A!important;line-height:1}
+  .cert-title .q{color:#5C41E0!important}
+  .cert-strap{font-size:6.5pt;letter-spacing:.2em;color:#6A6A76!important;margin-top:5pt}
+
+  /* issue block — a ruled register, not tiles */
+  .issue{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:0!important;
+    border:none!important;border-bottom:.5pt solid #C9C9D2!important;margin-bottom:16pt}
+  .issue div{padding:9pt 12pt 9pt 0!important;border:none!important}
+  .issue .k{font-size:6pt;letter-spacing:.16em;color:#8A8A96!important}
+  .issue .v{font-size:9.5pt;font-weight:600;color:#15151A!important;margin-top:2pt}
+
+  /* sections */
+  .sec{padding:14pt 0 16pt!important;border-bottom:.5pt solid #E2E2E8!important;page-break-inside:auto}
+  .sec:last-child{border-bottom:none!important}
+  .sec-h{margin-bottom:10pt;gap:8pt}
+  .sec-n{font-size:6.5pt;color:#5C41E0!important;border:.5pt solid #5C41E0!important;
+    border-radius:2pt!important;padding:1.5pt 4pt}
+  .sec-t{font-size:7.5pt;letter-spacing:.18em;color:#15151A!important}
+  .sec-note{font-size:8.5pt;color:#5A5A66!important;margin-bottom:11pt;max-width:none}
+
+  /* result: the dial becomes a printed figure, conic gradients render badly */
+  .result{display:block!important}
+  .dial{width:auto!important;height:auto!important;display:block!important;margin:0 0 10pt!important;
+    border-radius:0!important}
+  .dial .inner{width:auto!important;height:auto!important;display:block!important;text-align:left!important}
+  .dial .pc{font-size:40pt;color:#15151A!important;line-height:.9;letter-spacing:-.02em}
+  .dial .lb{font-size:6.5pt;letter-spacing:.2em;color:#8A8A96!important;margin-top:3pt}
+  .verdict .vt{font-size:14pt;color:#15151A!important;margin-top:2pt}
+  .verdict p{font-size:9pt;color:#5A5A66!important;margin-top:5pt;max-width:70ch}
+
+  /* metrics as a ruled row */
+  .mrow{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:0!important;
+    border:none!important;border-top:.5pt solid #C9C9D2!important;
+    border-bottom:.5pt solid #C9C9D2!important;margin-top:14pt}
+  .m{padding:10pt 12pt 10pt 0!important;border:none!important}
+  .m+.m{border-left:.5pt solid #E2E2E8!important;padding-left:12pt!important}
+  .m .v{font-size:20pt;color:#15151A!important;line-height:1}
+  .m .l{font-size:6pt;letter-spacing:.14em;color:#8A8A96!important;margin-top:3pt}
+  .m.g .v,.m.y .v,.m.p .v{color:#15151A!important}
+
+  /* continuity: printed bars with a hairline track */
+  .chain{gap:7pt!important}
+  .link{padding:0 0 5pt!important;border:none!important;
+    border-bottom:.5pt solid #E2E2E8!important;grid-template-columns:64pt 1fr 34pt!important;gap:10pt!important}
+  .link .stage{font-size:6.5pt;letter-spacing:.14em;color:#5A5A66!important}
+  .link .bar{height:4pt!important;border:.5pt solid #C9C9D2!important;overflow:hidden}
+  .link .fill{background:#5C41E0!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .link.pass .fill{background:#15151A!important}
+  .link .n{font-size:13pt;color:#15151A!important}
+  .drop{font-size:6.5pt;color:#8A8A96!important;padding-top:3pt}
+  .drop b{color:#15151A!important;font-weight:600}
+
+  /* schedule of results */
+  .tablewrap{overflow:visible!important;border:none!important;
+    border-top:1pt solid #15151A!important;border-bottom:.5pt solid #C9C9D2!important}
+  table{min-width:0!important;width:100%!important;font-size:8pt;table-layout:fixed}
   thead{display:table-header-group}
-  .dial{width:112px;height:112px}
-  .dial .inner{width:90px;height:90px}
+  th{color:#6A6A76!important;font-size:5.8pt;letter-spacing:.13em;padding:6pt 4pt!important;
+    border-bottom:.5pt solid #C9C9D2!important;background:none!important}
+  td{padding:6pt 4pt!important;border-bottom:.5pt solid #EDEDF1!important;color:#15151A!important}
+  th:nth-child(1),td:nth-child(1){width:8%}
+  th:nth-child(2),td:nth-child(2){width:25%}
+  th:nth-child(3),td:nth-child(3){width:11%}
+  th:nth-child(4),td:nth-child(4){width:14%}
+  th:nth-child(5),td:nth-child(5){width:12%}
+  th:nth-child(6),td:nth-child(6){width:20%}
+  th:nth-child(7),td:nth-child(7){width:10%}
+  .ref{font-size:7pt;color:#8A8A96!important}
+  .pcode{font-size:7.5pt;color:#5C41E0!important}
+  .job{font-size:6pt;letter-spacing:.08em;padding:1pt 0!important;border:none!important;
+    color:#5A5A66!important}
+  .fee{font-size:8pt;color:#15151A!important}
+  /* gates as printed marks — no filled chips */
+  .gate{width:auto!important;height:auto!important;border:none!important;display:inline!important;
+    font-size:8pt;color:#C0C0C8!important;margin-right:3pt}
+  .gate.on{color:#15151A!important;background:none!important}
+  .gate.off{color:#15151A!important}
+  .gatelbl{font-size:5.8pt;letter-spacing:.1em;color:#8A8A96!important;margin-left:4pt}
+  tr{page-break-inside:avoid}
+
+  /* job breakdown */
+  .bdrow{grid-template-columns:80pt 1fr 62pt!important;gap:10pt!important}
+  .bdrow .k{font-size:6.5pt;letter-spacing:.1em;color:#15151A!important}
+  .bdrow .track{height:4pt!important;border:.5pt solid #C9C9D2!important}
+  .bdrow .f{background:#15151A!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .bdrow .val{font-size:7pt;color:#5A5A66!important}
+
+  /* billing */
+  .dec{border:none!important;border-left:1.5pt solid #5C41E0!important;padding:2pt 0 2pt 12pt!important}
+  .dec p{font-size:8.5pt;color:#5A5A66!important;margin-bottom:7pt}
+  .dec strong{color:#15151A!important}
+  .total{border:none!important;border-top:1pt solid #15151A!important;
+    padding:9pt 0 0!important;margin-top:14pt;align-items:baseline}
+  .total .k{font-size:7pt;letter-spacing:.16em;color:#5A5A66!important}
+  .total .v{font-size:22pt;color:#15151A!important}
+  .sign{margin-top:18pt;gap:24pt!important}
+  .sigbox{border-top:.5pt solid #C9C9D2!important;padding-top:6pt!important}
+  .sigbox .k{font-size:6pt;letter-spacing:.15em;color:#8A8A96!important}
+  .sigbox .v{font-size:9pt;color:#15151A!important}
+
+  .printfoot{display:block!important;margin-top:16pt;padding-top:7pt;
+    border-top:.5pt solid #C9C9D2!important;font-family:var(--mono);font-size:6pt;
+    letter-spacing:.14em;text-transform:uppercase;color:#8A8A96!important;text-align:center}
+  .sec,.dec,.total,.mrow,.issue{page-break-inside:avoid}
 }
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -402,7 +488,7 @@ function build(){
   /* masthead */
   +'<div class="cert-head">'
     +'<div class="cert-title">Schedule of <span class="q">surveys</span></div>'
-    +'<div class="cert-strap">Wattleads // missed-call recovery // verification report</div>'
+    +'<div class="cert-strap">Wattleads &nbsp;&middot;&nbsp; missed-call recovery &nbsp;&middot;&nbsp; verification report</div>'
   +'</div>'
   +'<div class="issue">'
     +'<div><div class="k">Issued to</div><div class="v">'+esc(client||rows[0].client)+'</div></div>'
@@ -477,6 +563,7 @@ function build(){
     +'</div>'
   +'</div>'
 
+  +'<div class="printfoot">'+esc(client||rows[0].client)+' &middot; WL-'+(pTo?pTo.getFullYear():"")+String((pTo?pTo.getMonth()+1:1)).padStart(2,"0")+'-'+String(booked).padStart(3,"0")+' &middot; Wattleads &middot; hello@wattleads.co.uk</div>'
   +'</div>';
 
   var rep=document.getElementById("report");
